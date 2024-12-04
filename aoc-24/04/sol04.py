@@ -1,15 +1,5 @@
-# read sample.txt into 2d list letters
+# Constants and setup
 FILE_NAME = "input.txt"
-
-letters = []
-with open(FILE_NAME) as f:
-    for line in f:
-        letters.append(list(line.strip()))
-
-ROWS = len(letters)
-COLS = len(letters[0])
-
-print(letters)
 
 DIRECTION_OFFSETS = [
     (-1, -1),  # up left
@@ -22,63 +12,67 @@ DIRECTION_OFFSETS = [
     (1, 1)     # down right
 ]
 
+# Load letters into a 2D list
+def load_letters(file_name):
+    with open(file_name) as f:
+        return [list(line.strip()) for line in f]
 
+letters = load_letters(FILE_NAME)
+ROWS, COLS = len(letters), len(letters[0])
+
+
+# Part 1 Functions
 def matches(from_coords, direction_offset, remaining_word="XMAS"):
     row, col = from_coords
-    if not 0 <= row < ROWS or not 0 <= col < COLS:
+    if not (0 <= row < ROWS and 0 <= col < COLS):
         return False
-    curr_char = letters[row][col]
-    first_char = remaining_word[0]
-    if curr_char != first_char:
+    if letters[row][col] != remaining_word[0]:
         return False
     if len(remaining_word) == 1:
         return True
+
     row_offset, col_offset = direction_offset
     new_coords = (row + row_offset, col + col_offset)
-    return matches(new_coords, direction_offset, remaining_word=remaining_word[1:])
-
-def count_matches(coords):
-    res = 0
-    for dir_offset in DIRECTION_OFFSETS:
-        if matches(coords, dir_offset):
-            res += 1
-
-    print(f'{res} matches from {coords}')
-    return res
+    return matches(new_coords, direction_offset, remaining_word[1:])
 
 
-# res = 0
-# for r in range(ROWS):
-#     for c in range(COLS):
-#         coords = (r, c)
-#         res += count_matches(coords)
-#
-# print(f"Part 1: {res}")
-#
-### Part 2
+def count_matches(coords, word="XMAS"):
+    return sum(matches(coords, offset, word) for offset in DIRECTION_OFFSETS)
 
 
+def part_1():
+    total_matches = sum(
+        count_matches((r, c))
+        for r in range(ROWS)
+        for c in range(COLS)
+    )
+    print(f"Part 1: {total_matches}")
+
+
+# Part 2 Functions
 def is_xmas_center(coords):
     row, col = coords
     if letters[row][col] != 'A':
         return False
-    first_candidate = letters[row-1][col-1] + letters[row+1][col+1]
-    second_candidate = letters[row-1][col+1] + letters[row+1][col-1]
-    return is_ms(first_candidate) and is_ms(second_candidate)
+
+    def is_ms(candidate):
+        return candidate in {"MS", "SM"}
+
+    diagonal_1 = letters[row - 1][col - 1] + letters[row + 1][col + 1]
+    diagonal_2 = letters[row - 1][col + 1] + letters[row + 1][col - 1]
+    return is_ms(diagonal_1) and is_ms(diagonal_2)
 
 
-def is_ms(candidate):
-    return candidate == 'MS' or candidate == 'SM'
-
-res = 0
-for r in range(1, ROWS-1):
-    for c in range(1, COLS-1):
-        coords = (r, c)
-        if is_xmas_center(coords):
-            res += 1
+def part_2():
+    total_centers = sum(
+        is_xmas_center((r, c))
+        for r in range(1, ROWS - 1)
+        for c in range(1, COLS - 1)
+    )
+    print(f"Part 2: {total_centers}")
 
 
-print(f'Part 2: {res}')
-
-
-
+# Main Execution
+if __name__ == "__main__":
+    part_1()
+    part_2()
